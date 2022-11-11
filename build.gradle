@@ -1,0 +1,115 @@
+plugins {
+    id("org.jetbrains.kotlin.jvm") version "1.4.10"
+    id("org.jetbrains.kotlin.kapt") version "1.4.10"
+    id("org.jetbrains.kotlin.plugin.allopen") version "1.4.10"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("io.micronaut.application") version "1.2.0"
+    id('jacoco')
+}
+
+version = "0.1"
+group = "com.doordash.interview.phone_number_parser"
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+micronaut {
+    runtime("netty")
+    testRuntime("junit5")
+    processing {
+        incremental(true)
+        annotations("com.doordash.interview.phone_number_parser.*")
+    }
+}
+
+dependencies {
+    implementation("io.micronaut:micronaut-validation")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
+    implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
+    implementation("io.micronaut:micronaut-runtime")
+    implementation("javax.annotation:javax.annotation-api")
+    implementation("io.micronaut:micronaut-http-client")
+    implementation("io.micronaut.flyway:micronaut-flyway")
+    implementation("org.jdbi:jdbi3-kotlin-sqlobject:3.18.0")
+    implementation("org.apache.logging.log4j:log4j-core:2.12.1")
+    runtimeOnly("org.apache.logging.log4j:log4j-api:2.12.1")
+    runtimeOnly("org.apache.logging.log4j:log4j-slf4j-impl:2.12.1")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    runtimeOnly("org.postgresql:postgresql")
+    testImplementation("org.testcontainers:testcontainers:1.17.2")
+    testImplementation("org.testcontainers:junit-jupiter:1.17.2")
+    testRuntimeOnly("org.testcontainers:postgresql:1.17.2")
+    testImplementation("io.strikt:strikt-core:0.28.1")
+    implementation("io.micronaut.redis:micronaut-redis-lettuce")
+    implementation("io.micronaut.serde:micronaut-serde-jackson:1.2.0")
+    annotationProcessor("io.micronaut.serde:micronaut-serde-processor:1.2.0")
+    testAnnotationProcessor "io.micronaut:micronaut-inject-java"
+}
+
+//configurations.all {
+//    resolutionStrategy.dependencySubstitution {
+//        substitute(module("io.micronaut:micronaut-jackson-databind"))
+//                .using(module("io.micronaut.serde:micronaut-serde-jackson:1.2.0"))
+//    }
+//}
+
+// https://micronaut-projects.github.io/micronaut-test/latest/guide/#junit5
+test {
+    useJUnitPlatform()
+}
+
+
+application {
+    mainClass.set("com.doordash.interview.phone_number_parser.ApplicationKt")
+}
+
+java {
+    sourceCompatibility = JavaVersion.toVersion("11")
+}
+
+check {
+    dependsOn jacocoTestCoverageVerification
+}
+jacocoTestReport {
+    dependsOn test
+}
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
+    }
+}
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.9
+            }
+        }
+        rule {
+            element = 'CLASS'
+            excludes = ['com.doordash.interview.phone_number_parser.Application']
+            limit {
+                minimum = 0.9
+            }
+        }
+    }
+}
+
+tasks {
+    compileKotlin {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
+    compileTestKotlin {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
+}
+

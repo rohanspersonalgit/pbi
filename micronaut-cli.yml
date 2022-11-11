@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: com.doordash.interview.phone_number_parser
+testFramework: junit
+sourceLanguage: kotlin
+buildTool: gradle
+features: [annotation-api, app-name, flyway, gradle, http-client, jdbc-hikari, junit, kotlin, kotlin-application, log4j2, netty-server, postgres, readme, shade, sql-jdbi, testcontainers, yaml]
