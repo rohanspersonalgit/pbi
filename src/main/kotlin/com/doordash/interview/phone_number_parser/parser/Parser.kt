@@ -82,34 +82,3 @@ enum class PhoneType(val value: String) {
 }
 
 data class PhoneNumber(val number: String, val phoneType: PhoneType)
-
-
-
-//        while(i < data.length) {
-//            if (data[i].toString() == "(") {
-//                if (i + 5 < data.length){
-//                    val checkType = data.substring(i, i + 6)
-//                    if(checkType == ("(Cell)") || checkType == "(Home)"){
-//                        currType = checkType
-//                        // where we expect the first digit to be
-//                        i += 6
-//                        currString = ""
-//                        while (i < data.length){
-//                            if(data[i].isDigit()){
-//                                currString += data[i]
-//                            }
-//                            i += 1
-//                        }
-//                        if(currString.length == 10){ // EXPECTED_PHONE_LENGTH
-//                            results.add(PhoneNumber(currString,generatePhoneType(currType)))
-//                        }
-//                        currString = ""
-//                        currType = ""
-//
-//                    }
-//                }else{
-//                    break
-//                }
-//            }
-//        }
-//        return results
