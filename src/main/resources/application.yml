@@ -1,8 +1,16 @@
 micronaut:
   application:
     name: phone_number_parser
+  server:
+    max-request-size: 10KB
+
 redis:
   uri: redis://localhost:6379
+  timeout: 10s
+
+  password: password
+
+
 
 #datasources:
 #  default:

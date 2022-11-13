@@ -1,3 +1,10 @@
+micronaut:
+  application:
+    name: phone_number_parser
+  server:
+    max-request-size: 10KB
+    port: -1
+
 datasources:
   default:
     url: jdbc:tc:postgresql:12:///postgres

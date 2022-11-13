@@ -1,5 +1,7 @@
 package com.doordash.interview.phone_number_parser.parser
 
+import org.slf4j.LoggerFactory
+
 const val AREA_CODE_LENGTH = 3
 const val TELEPHONE_PREFIX_LENGTH = 3
 const val LINE_NUMBER_LENGTH = 4
@@ -9,6 +11,7 @@ const val VALID_PHONE_TYPE_SIZE = 6
 class Parser(
     private val data: String
 ) {
+    private val logger = LoggerFactory.getLogger(this::class.java)
     private var currIndex = 0
 
     private fun extractPhoneNumberSegment(expectedDigits: Int): String{
@@ -48,8 +51,8 @@ class Parser(
         }
     }
 
-    fun clean(): List<PhoneNumber> {
-        val results  = mutableListOf<PhoneNumber>()
+    fun clean(): Map<PhoneNumber,Int> {
+        val resMap = mutableMapOf<PhoneNumber, Int>().withDefault { 0 }
         while(currIndex < data.length){
             try{
                 findStart()
@@ -57,13 +60,20 @@ class Parser(
                 val areaCode = extractPhoneNumberSegment(AREA_CODE_LENGTH)
                 val phoneNumberPrefix = extractPhoneNumberSegment(TELEPHONE_PREFIX_LENGTH)
                 val phoneNumberLineNumber = extractPhoneNumberSegment(LINE_NUMBER_LENGTH)
-                results.add(PhoneNumber(areaCode + phoneNumberPrefix + phoneNumberLineNumber, currType))
+                // we are gonna say that if the next character is a number then invalid
+                // TODO But what about 6048057254-43? Do we include?
+                // 6048057254a? Lets say thats okay? what if its 6048057254ac6048057254?
+                // 6048057254 435
+                // 6048057254604 a NO from prior questions
+                // generalize to 6048057254EOF or 6048067254 (any_char) or 6048057254
+                val phoneNumber = PhoneNumber(areaCode + phoneNumberPrefix + phoneNumberLineNumber, currType)
+                resMap[phoneNumber] = resMap.getValue(phoneNumber) + 1
             }catch (e: Exception){
                 currIndex += 1
                 // we can log something meaningful here :)
             }
         }
-        return results
+        return resMap
     }
 
     private fun generatePhoneType(phoneTypeData: String): PhoneType {
@@ -81,4 +91,8 @@ enum class PhoneType(val value: String) {
 
 }
 
-data class PhoneNumber(val number: String, val phoneType: PhoneType)
+data class PhoneNumber(val number: String, val phoneType: PhoneType){
+    fun generateKey():String{
+        return number + phoneType.value
+    }
+}

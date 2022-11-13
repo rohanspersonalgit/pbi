@@ -25,10 +25,8 @@ micronaut {
 }
 
 dependencies {
-    kaptTest("io.micronaut:micronaut-inject-java")
-    testImplementation "io.micronaut.test:micronaut-test-kotest:2.2.1"
-    testImplementation "io.mockk:mockk:1.10.2"
-    testImplementation "io.kotest:kotest-runner-junit5-jvm:4.3.0"
+    testAnnotationProcessor "io.micronaut:micronaut-inject-java"
+
     implementation("io.micronaut:micronaut-validation")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
@@ -45,9 +43,16 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter:1.17.2")
     testImplementation("io.strikt:strikt-core:0.28.1")
     implementation("io.micronaut.redis:micronaut-redis-lettuce")
-    testCompile "io.micronaut.test:micronaut-test-junit5:1.2.0"
-    testCompile "org.mockito:mockito-junit-jupiter:2.22.0"
-    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.1.0"
+    testCompile("io.micronaut.test:micronaut-test-junit5:1.2.0")
+    testCompile("org.mockito:mockito-junit-jupiter:2.22.0")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.1.0")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("io.micronaut.test:micronaut-test-junit5:2.2.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.0")
+
+    kapt("io.micronaut:micronaut-validation") // Kotlin only
+    compile("io.micronaut:micronaut-validation")
 }
 
 

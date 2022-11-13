@@ -2,42 +2,43 @@ package com.doordash.interview.phone_number_parser.proxy
 
 import com.doordash.interview.phone_number_parser.parser.PhoneNumber
 import com.doordash.interview.phone_number_parser.parser.PhoneType
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.sync.RedisCommands
+import io.micronaut.retry.annotation.Retryable
+import java.time.Duration
+import javax.annotation.PostConstruct
 import javax.inject.Singleton
+import javax.validation.constraints.Null
 
 interface CacheProxy {
-    fun save(value: PhoneNumber):PhoneNumberRecord
+    fun save(value: PhoneNumber, numOccurances: Int):PhoneNumberRecord
 }
+
 @Singleton
+@Retryable(attempts = "5")
 class CacheProxyImpl(
-    // based on micronaut documetation maybe should be using serde TODO
+    private val connection: StatefulRedisConnection<String,String>
 ): CacheProxy {
 
 
+    @PostConstruct
+    fun initialize() {
+        connection.sync().auth("password")
+    }
+
     //TODO: Add a username password for redis
 
-    // this should be injected however I am unfamilliar with micronaut/kotlin DI semantics
-    private val connection: StatefulRedisConnection<String, String> = RedisClient.create("redis://localhost:6379").connect()
-
-    override fun save(value: PhoneNumber):PhoneNumberRecord {
-        val key = generateKey(value)
+//    @Retryable @CircuitBreaker
+    override fun save(key: PhoneNumber, numOccurances: Int):PhoneNumberRecord {
         val commands: RedisCommands<String, String> = connection.sync()
-
-        val occurrences = commands.incr(key).toInt()
-        return generatePhoneNumberRecord(key, value, occurrences)
+        val occurrences = commands.incrby(key.generateKey(), numOccurances.toLong())
+        return generatePhoneNumberRecord(key, occurrences.toInt())
     }
 
-    private fun generateKey(value: PhoneNumber): String {
-        return value.phoneType.value + value.number
-    }
-
-    private fun generatePhoneNumberRecord(id: String, phoneNumber: PhoneNumber, occurrences: Int): PhoneNumberRecord {
+    private fun generatePhoneNumberRecord(phoneNumber: PhoneNumber, occurrences: Int): PhoneNumberRecord {
         return PhoneNumberRecord(
-            id,
+            phoneNumber.generateKey(),
             number = phoneNumber.number,
             type = phoneNumber.phoneType,
             occurrences
@@ -50,7 +51,7 @@ internal data class Record(
     val occurrences: Int
 )
 
-data class PhoneNumberRecord(
+data class PhoneNumberRecord (
     val id: String,
     val number: String,
     val type: PhoneType,

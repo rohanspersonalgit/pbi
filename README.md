@@ -1,4 +1,23 @@
 # phone-number-parser
+
+## Intro 
+This service exposes a single api for use by merchants to provide customer phone numbers.  
+The data is provided as a json in the structure below.  
+```json
+{"raw_phone_numbers": "${input_data}"}
+
+```
+input_data is equal to a string and has unclean data. The merchant is not willing to clean up their data and it is unlikely that the merchant would attempt reuploading the data[1]
+
+
+##Design Choices
+
+###Redis
+
+### Input Validation
+
+##Assumptions
+
 ## Problem Statement
 https://docs.google.com/document/d/1JH8UD2U6is-lJ_ogadIjWASj9ZJw6z0sOIENk_zsomg/edit?usp=sharing
 ## First-time Setup
@@ -54,11 +73,6 @@ https://docs.google.com/document/d/1JH8UD2U6is-lJ_ogadIjWASj9ZJw6z0sOIENk_zsomg/
 
 - [https://www.testcontainers.org/](https://www.testcontainers.org/)
 
-### flyway
-
-- [Micronaut Flyway Database Migration documentation](https://micronaut-projects.github.io/micronaut-flyway/latest/guide/index.html)
-
-- [https://flywaydb.org/](https://flywaydb.org/)
 
 ### jdbc-hikari
 

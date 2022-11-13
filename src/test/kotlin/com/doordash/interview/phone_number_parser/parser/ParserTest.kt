@@ -1,13 +1,12 @@
 package com.doordash.interview.phone_number_parser.parser
 
-import io.kotest.core.spec.style.ShouldSpec
-import io.kotest.matchers.ints.shouldBeZero
-import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Test
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import org.junit.jupiter.api.Assertions
 
 @MicronautTest
-class ParserTest : ShouldSpec( {
-    val perfectCase1 = ParserInputToExpectedOutput(
+class ParserTest {
+    private val perfectCase1 = ParserInputToExpectedOutput(
         "(Cell) 604-805-7254",
         PhoneNumber(
             "6048057254",
@@ -15,7 +14,7 @@ class ParserTest : ShouldSpec( {
         )
     )
 
-     val perfectCase2 = ParserInputToExpectedOutput(
+     private val perfectCase2 = ParserInputToExpectedOutput(
         "(Home) 415-415-4155",
         PhoneNumber(
             "4154154155",
@@ -23,7 +22,7 @@ class ParserTest : ShouldSpec( {
         )
     )
 
-     val perfectCase3 = ParserInputToExpectedOutput(
+     private val perfectCase3 = ParserInputToExpectedOutput(
         "(Cell) 1231231234",
         PhoneNumber(
             "1231231234",
@@ -31,26 +30,32 @@ class ParserTest : ShouldSpec( {
         )
     )
 
-    should("handle a perfectly formatted input string with a single output") {
+    @Test
+    fun`handle a perfectly formatted input string with a single output`(){
         val parser = Parser(perfectCase1.input)
         val res = parser.clean()
 
-        res.size shouldBe 1
-        checkResults(res.first(), perfectCase1.expectedOutput)
+
+        checkResults(res,
+        mapOf(
+            perfectCase1.expectedOutput to 1
+        ))
     }
 
-    should(" handle a perfectly formatted input string with multiple outputs"){
+    @Test
+    fun`handle a perfectly formatted input string with multiple outputs`(){
         val testCases = listOf(perfectCase1, perfectCase2, perfectCase3)
         val parser = Parser(testCases.map { it.input }.toString())
         val res = parser.clean()
-        res.size shouldBe 3
-
-        for (i in 0..2){
-            checkResults(res[i], testCases[i].expectedOutput)
-        }
+        checkResults(res, mapOf(
+            perfectCase1.expectedOutput to 1,
+            perfectCase2.expectedOutput to 1,
+            perfectCase3.expectedOutput to 1
+        ))
     }
 
-    should(" handle a case where there are dashes in the number"){
+    @Test
+    fun `handle a case where there are dashes in the number`(){
         val testCase = ParserInputToExpectedOutput(
             "(Cell) 604-805-7254",
             PhoneNumber(
@@ -60,31 +65,54 @@ class ParserTest : ShouldSpec( {
         )
 
         val res = Parser(testCase.input).clean()
-        res.size shouldBe 1
-        checkResults(res.first(), testCase.expectedOutput)
+
+        checkResults(res, mapOf(testCase.expectedOutput to 1))
     }
 
-    should(" return none when there is a invalid phone type"){
+    @Test
+    fun `return none when there is a invalid phone type`(){
         val inputToExpectedOutput = "(Home6048057254"
         val res = Parser(inputToExpectedOutput).clean()
-        res.size.shouldBeZero()
+        Assertions.assertEquals(
+            0,
+            res.size
+        )
     }
 
-    should(" return none when there is a invalid phone number"){
+    @Test
+    fun `return none when there is a invalid phone number`(){
         val res = Parser("(Home)604805625").clean()
-        res.size shouldBe 0
+        Assertions.assertEquals(
+            0,
+            res.size
+        )
     }
 
-    should(" return 1 valid 1 invalid value"){
+    @Test
+    fun `return 1 valid 1 invalid value`(){
         val res = Parser("(Home)604805762" + perfectCase1.input).clean()
-        res.size shouldBe 1
-        checkResults(res.first(), perfectCase1.expectedOutput)
+        Assertions.assertEquals(
+            1,
+            res.size
+        )
+        checkResults(res, mapOf(perfectCase1.expectedOutput to 1))
     }
-})
+}
 
-fun checkResults(result: PhoneNumber, expectedOutput: PhoneNumber){
-    result.number shouldBe expectedOutput.number
-    result.phoneType shouldBe expectedOutput.phoneType
+fun checkResults(result: Map<PhoneNumber, Int>, expectedOutput: Map<PhoneNumber, Int>){
+    Assertions.assertEquals(
+        result.size,
+        expectedOutput.size
+    )
+    expectedOutput.entries.forEach{
+        Assertions.assertTrue(
+            result.containsKey(it.key)
+        )
+        Assertions.assertEquals(
+            it.value,
+            result[it.key]
+        )
+    }
 }
 
 internal data class ParserInputToExpectedOutput(
