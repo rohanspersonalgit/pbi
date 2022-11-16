@@ -5,9 +5,11 @@ micronaut:
     max-request-size: 10KB
 
 redis:
-  uri: redis://localhost:6379
-  timeout: 10s
-
+  #  uri: redis://password@localhost:6379
+  #  uri: redis://localhost:6379
+  timeout: 5s
+  port: 6379
+  host: localhost
   password: password
 
 
