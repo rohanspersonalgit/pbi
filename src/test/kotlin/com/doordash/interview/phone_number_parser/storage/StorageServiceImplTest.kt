@@ -1,4 +1,4 @@
-package com.doordash.interview.phone_number_parser.proxy
+package com.doordash.interview.phone_number_parser.storage
 
 import com.doordash.interview.phone_number_parser.parser.PhoneNumber
 import com.doordash.interview.phone_number_parser.parser.PhoneType
@@ -51,8 +51,10 @@ internal class StorageServiceImplTest {
     @Test
     fun `throw exception when connection is closed`() {
         val proxy = StorageServiceImpl(connection)
+
         `when`(connection.isOpen)
             .thenReturn(false)
+
         expectThrows<StoragePersistException> {
             proxy.save(phoneNumber, 1)
         }
@@ -61,12 +63,16 @@ internal class StorageServiceImplTest {
     @Test
     fun `Throw exception when redis command fails`() {
         val proxy = StorageServiceImpl(connection)
+
         `when`(connection.isOpen)
             .thenReturn(true)
+
         `when`(connection.sync())
             .thenReturn(commands)
+
         `when`(commands.incrby(phoneNumber.key(), 1))
             .thenThrow(RedisException::class.java)
+
         expectThrows<StoragePersistException> {
             proxy.save(phoneNumber, 1)
         }
@@ -76,7 +82,6 @@ internal class StorageServiceImplTest {
     fun commands(): RedisCommands<String, String> {
         return mock(RedisCommands::class.java) as RedisCommands<String, String>
     }
-
 
     @MockBean(StatefulRedisConnection::class)
     fun connection(): StatefulRedisConnection<String, String> {

@@ -1,8 +1,9 @@
 package com.doordash.interview.phone_number_parser.controllers
 
 import com.doordash.interview.phone_number_parser.parser.Parser
-import com.doordash.interview.phone_number_parser.proxy.StoragePersistException
-import com.doordash.interview.phone_number_parser.proxy.StorageService
+import com.doordash.interview.phone_number_parser.storage.StoragePersistException
+import com.doordash.interview.phone_number_parser.storage.StorageService
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.micronaut.http.HttpResponse
@@ -13,8 +14,6 @@ import io.micronaut.http.annotation.Body
 import org.slf4j.LoggerFactory
 import java.time.Instant
 
-// TODO ASK ABOUT THE 100MS should we just end the reaquest
-//  or is somethign else like maybe a error log beteter
 const val MAX_EXECUTION_TIME = 100
 const val EMPTY_JSON_INPUT = "{}"
 
@@ -25,7 +24,6 @@ class PhoneNumberController(
 ) {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
-
 
     @Post(
         value = "/",
@@ -45,47 +43,46 @@ class PhoneNumberController(
             )
         }
 
-        val inputJson: InputJson = try {
-            mapper.readValue(input)
-        } catch (e: Exception) {
-            logger.error(
-                "Input=$input threw the following error: " +
-                        "$e"
-            )
-            return HttpResponse.badRequest("Provided input was not of expected input")
-        }
 
-        val res = Parser
-            .clean(
-                inputJson.raw_phone_numbers
-            )
-            .map {
-                try {
-                    proxy.save(it.key, it.value)
-                } catch (e: StoragePersistException) {
-                    logger.error(e.message)
-                    return HttpResponse.serverError("Database down, please try again later")
+        try{
+            val inputJson: InputJson = mapper.readValue(input)
+
+            val res = Parser
+                .clean(
+                    inputJson.raw_phone_numbers
+                )
+                .map {
+                        proxy.save(it.key, it.value)
                 }
+
+            if (res.isEmpty()) return HttpResponse.badRequest(
+                "raw_phone_numbers contained zero valid inputs"
+            )
+
+            val executionTime = Instant.now()
+                .minusMillis(
+                    starTime.toEpochMilli()
+                )
+                .toEpochMilli()
+
+            if (executionTime > MAX_EXECUTION_TIME) {
+                logger.error(
+                    "The following input took $executionTime milliseconds to complete.\n" +
+                            "input=$inputJson"
+                )
             }
 
-        if (res.isEmpty()) return HttpResponse.badRequest(
-            "raw_phone_numbers contained zero valid inputs"
-        )
-
-        val executionTime = Instant.now().minusMillis(starTime.toEpochMilli()).toEpochMilli()
-
-        // TODO DO WE FAIL ON EXECUTION?
-        if (executionTime > MAX_EXECUTION_TIME) {
+            return HttpResponse.created(res)
+        }catch (e: JsonParseException) {
             logger.error(
-                "The following input took $executionTime milliseconds to complete.\n" +
-                        "input=$inputJson"
+                "Error parsing json for input=$input\n due to error=$e"
             )
+            return HttpResponse.badRequest("Provided input was not of expected input")
+        }catch (e: StoragePersistException) {
+            logger.error(e.message)
+            return HttpResponse.serverError("Database down, please try again later")
         }
-
-        return HttpResponse.created(res)
     }
 }
 
 data class InputJson(val raw_phone_numbers: String)
-
-// todo: Healthendpoint https://docs.micronaut.io/2.2.1/guide/#healthEndpoint

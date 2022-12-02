@@ -2,6 +2,7 @@ package com.doordash.interview.phone_number_parser.parser
 
 import org.junit.jupiter.api.Test
 import strikt.api.expectThat
+import strikt.api.expectThrows
 import strikt.assertions.isEqualTo
 import strikt.assertions.isTrue
 
@@ -93,7 +94,6 @@ class ParserTest {
 
     @Test
     fun `return none when phone number is to short`() {
-        // TODO
         val res = Parser.clean("(Home)604805625")
         checkResults(res, mapOf())
     }
@@ -112,7 +112,6 @@ class ParserTest {
 
     @Test
     fun `return none when phone number is to long`() {
-        // TODO
         val res = Parser.clean("(Home)60480562511")
         checkResults(res, mapOf())
     }
@@ -156,7 +155,14 @@ class ParserTest {
     fun `generatePhoneNumberKey as expected`() {
         expectThat(
             perfectCase1.expectedOutput.key()
-        ).isEqualTo("6048057254Cell")
+        ).isEqualTo("6048057254cell")
+    }
+
+    @Test
+    fun `throw exception when given an invalid phone type`(){
+        expectThrows<InvalidPhoneTypeException> {
+            PhoneType.fromDataString("test")
+        }
     }
 }
 

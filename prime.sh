@@ -1,0 +1,1 @@
+curl -X POST localhost:8080/phone-numbers -H 'Content-Type: application/json' -d '{}'

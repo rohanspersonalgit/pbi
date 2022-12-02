@@ -5,26 +5,7 @@ micronaut:
     max-request-size: 10KB
 
 redis:
-  #  uri: redis://password@localhost:6379
-  #  uri: redis://localhost:6379
-  timeout: 5s
+  timeout: 10s
   port: 6379
   host: localhost
   password: password
-
-
-
-#datasources:
-#  default:
-#    url: jdbc:postgresql://localhost:5432/phone_number_db
-#    driverClassName: org.postgresql.Driver
-#    username: root
-#    password: password
-#flyway:
-#  datasources:
-#    default:
-#      enabled: true
-#      clean-schema: true
-#endpoints:
-#  flyway:
-#    sensitive: false

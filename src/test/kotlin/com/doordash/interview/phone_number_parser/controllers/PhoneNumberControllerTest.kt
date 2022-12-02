@@ -3,7 +3,9 @@ package com.doordash.interview.phone_number_parser.controllers
 import com.doordash.interview.phone_number_parser.parser.Parser
 import com.doordash.interview.phone_number_parser.parser.PhoneNumber
 import com.doordash.interview.phone_number_parser.parser.PhoneType
-import com.doordash.interview.phone_number_parser.proxy.*
+import com.doordash.interview.phone_number_parser.storage.PhoneNumberRecord
+import com.doordash.interview.phone_number_parser.storage.StoragePersistException
+import com.doordash.interview.phone_number_parser.storage.StorageService
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
@@ -15,7 +17,6 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.mockito.Mockito.*
-import org.testcontainers.containers.GenericContainer
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import javax.inject.Inject
@@ -44,7 +45,7 @@ class PhoneNumberControllerTest {
 
     @AfterEach
     internal fun afterEach() {
-       reset(cacheProxy)
+        reset(cacheProxy)
         clearMocks(Parser)
     }
 
@@ -64,6 +65,7 @@ class PhoneNumberControllerTest {
             .thenReturn(phoneNumberRecord)
 
         every {Parser.clean("(Home) 6048357354")} returns mapOf(phoneNumber to 1)
+
         val call = client.exchange(
             HttpRequest.POST(
                 "/phone-numbers",
@@ -71,6 +73,7 @@ class PhoneNumberControllerTest {
             ),
             PhoneNumberRecord::class.java
         )
+
         val response = call.blockingFirst()
         expectThat(response.status)
             .isEqualTo(HttpStatus.CREATED)
@@ -84,12 +87,15 @@ class PhoneNumberControllerTest {
     @Test
     fun `Return 404 empty string message for empty input`() {
         val call: HttpResponse<String> = makeErrorCallWithGivenBody("{}")
+
         every { Parser.clean("") } returns mapOf()
+
         expectThat(call.status).isEqualTo(HttpStatus.BAD_REQUEST)
         expectThat(call.body()).isEqualTo(
             "Empty json provided! " +
                     "Please provided a json string of the following format"
         )
+
         verifyZeroInteractions(cacheProxy)
         verify(exactly = 0) { Parser.clean(any()) }
     }
@@ -100,6 +106,7 @@ class PhoneNumberControllerTest {
             makeErrorCallWithGivenBody(
                 "Provided input was not of expected input"
             )
+
         expectThat(call.status).isEqualTo(HttpStatus.BAD_REQUEST)
         expectThat(call.body()).isEqualTo(
             "Provided input was not of expected input"
@@ -116,6 +123,7 @@ class PhoneNumberControllerTest {
             makeErrorCallWithGivenBody(
                 "{\"raw_phone_numbers\":\"\"}"
             )
+
         expectThat(call.status).isEqualTo(HttpStatus.BAD_REQUEST)
         expectThat(call.body()).isEqualTo(
             "raw_phone_numbers contained zero valid inputs"
@@ -163,5 +171,3 @@ class PhoneNumberControllerTest {
         return mock(StorageService::class.java)
     }
 }
-
-class KGenericContainer(imageName: String) : GenericContainer<KGenericContainer>(imageName)
